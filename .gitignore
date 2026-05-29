@@ -1,0 +1,49 @@
+# Credentials and sensitive data — never commit these
+credentials*.json
+creds*.json
+token*.json
+*.token
+service_account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Large data / raster files (store on Zenodo/GDrive, not git)
+*.tif
+*.tif.aux.xml
+*.tif.ovr
+*.gpkg
+*.pkl
+*.h5
+*.hdf5
+*.nc
+interm_results/
+src/results.pkl
+src/results.json
+
+# Generated outputs / logs inside src/
+src/*.png
+src/*.pdf
+src/*.txt
+src/results.*
+
+# OS / editor artefacts
+.DS_Store
+Thumbs.db
+*.~lock.*
+*.swp
+*.swo
+
+# QGIS lock files
+.~lock*
