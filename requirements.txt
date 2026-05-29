@@ -1,0 +1,20 @@
+# Core scientific stack
+numpy>=1.24
+scipy>=1.10
+pandas>=2.0
+matplotlib>=3.7
+seaborn>=0.12
+
+# Geospatial
+geopandas>=0.13
+rasterio>=1.3
+shapely>=2.0
+
+# Utilities
+tqdm>=4.65
+natsort>=8.3
+
+# Google Drive access (for downloading model outputs)
+google-api-python-client>=2.0
+google-auth-httplib2>=0.1
+google-auth-oauthlib>=0.5
