@@ -1,21 +1,73 @@
 # Landsat Tree Cover Change Analysis — Sahel
 
-Code for detecting and quantifying changes in tree cover across the Sahel region using Landsat satellite imagery at 15 m resolution. This repository supports the analysis in:
+Code for detecting and quantifying changes in tree cover across the Sahel region using Landsat satellite imagery at 15 m resolution. This repository accompanies:
 
-> **[Paper title]** — [Authors], *Nature Sustainability*, [Year]. DOI: [paper DOI]
+> **Farmer Managed Natural Regeneration Promotes Expansion of Trees on Croplands in the Sahel** — *Nature Sustainability* (under review)
 
-A companion repository for GEE-based image preprocessing is available at: https://github.com/renel33/gee_landsat_preprocessing_and_download
+Preprocessing code (GEE download pipeline) is in a companion repository:
+https://github.com/renel33/gee_landsat_preprocessing_and_download
 
 ---
 
-## Overview
+## System requirements
 
-The analysis pipeline:
-1. Applies a pre-trained U-Net model to Landsat 7/8/9 imagery to produce 15 m tree cover predictions.
-2. Computes per-pixel temporal trends (slope + significance) across the 2000–2020 period.
-3. Aggregates results by country, region, and land-cover class (cropland vs. shrubland).
-4. Validates trends against Very High Resolution (VHR) Planet imagery.
-5. Generates all main-text and supplementary figures.
+**Operating system:** Linux (tested on Ubuntu 20.04 and 22.04); macOS 12+ should work.
+
+**Python:** 3.8 – 3.11 (tested on 3.10.12)
+
+**No non-standard hardware is required to run the demo.** The full analysis (Step 1–2 below) requires ≥32 GB RAM and ~2 TB disk for the full Sahel dataset; a 32-core CPU reduces runtime from weeks to ~6 hours.
+
+**Python package dependencies** (exact versions tested in parentheses):
+
+| Package | Tested version | Purpose |
+|---|---|---|
+| `numpy` | 1.24.3 | Array operations |
+| `scipy` | 1.10.1 | Trend statistics |
+| `pandas` | 2.0.3 | Tabular data |
+| `geopandas` | 0.13.2 | Vector / geospatial data |
+| `rasterio` | 1.3.8 | Raster I/O |
+| `matplotlib` | 3.7.2 | Figures |
+| `seaborn` | 0.12.2 | Figures |
+| `tqdm` | 4.65.0 | Progress bars |
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/renel33/landsat_tree_analysis.git
+cd landsat_tree_analysis
+pip install -r requirements.txt
+```
+
+**Typical install time on a normal desktop computer: ~5 minutes.**
+
+Using conda (recommended):
+```bash
+conda create -n fmnr python=3.10
+conda activate fmnr
+pip install -r requirements.txt
+```
+
+---
+
+## Demo
+
+A self-contained demo runs entirely on the two CSV files committed in this repository, requiring no external data or large downloads.
+
+**Instructions:**
+
+```bash
+jupyter notebook demo.ipynb
+```
+
+Run all cells in order (Kernel → Restart & Run All).
+
+**Expected output:** A bar chart (`demo_output_relative_gain.png`) showing the relative gain in tree cover on croplands vs. shrublands for each Sahel country, consistent with the paper's main finding. Summary statistics are printed in the final cell.
+
+**Expected run time: < 2 minutes on a normal desktop computer (any CPU).**
+
+The demo uses `significant_trends_ls789_wc_hct.csv` (2,284 tiles across the Sahel) and `significant_trends_ls789_wc_hct_trend.csv`, which are included in this repository.
 
 ---
 
@@ -23,17 +75,20 @@ The analysis pipeline:
 
 ```
 landsat_tree_analysis/
+├── demo.ipynb                         # Self-contained demo (START HERE)
+├── significant_trends_ls789_wc_hct.csv        # Demo data: per-tile tree cover statistics
+├── significant_trends_ls789_wc_hct_trend.csv  # Demo data: per-tile trend statistics
 ├── src/
-│   ├── significance.py            # Per-tile trend significance computation
-│   ├── analyse_predictions.py     # Tree cover statistics by country/region
-│   ├── analyse_predictions_v3.py  # Extended analysis (main version used in paper)
-│   ├── trend_validation.py        # Trend validation against VHR Planet data
-│   ├── relative_diff_v3.ipynb     # Main analysis notebook (produces paper figures)
+│   ├── significance.py            # Step 1: per-tile trend significance computation
+│   ├── significance_relative_diff.py  # Step 1b: cropland variant
+│   ├── significance_shrubland.py  # Step 1c: shrubland variant
+│   ├── analyse_predictions_v3.py  # Step 2: aggregate by country/region (paper version)
+│   ├── trend_validation.py        # Validation against VHR Planet imagery
+│   ├── relative_diff_v3.ipynb     # Figure generation notebook (paper figures)
 │   ├── minimum_detectable_tree.py # Detection-limit analysis
 │   └── downsample.py              # Raster downsampling utilities
 ├── notebooks/
-│   ├── change_validation.ipynb    # Change detection validation
-│   └── buildvrt.ipynb             # Building GDAL VRT mosaics
+│   └── change_validation.ipynb    # Change detection validation
 ├── validation/                    # Shapefiles for accuracy assessment
 ├── shapefiles/                    # Study-area boundary files
 ├── maurice_model/                 # Pre-trained U-Net weights (.h5)
@@ -44,112 +99,62 @@ landsat_tree_analysis/
 
 ---
 
-## System requirements
+## Instructions for use on your own data
 
-- **OS**: Linux (tested on Ubuntu 20.04 and 22.04); macOS should work
-- **Python**: 3.8 – 3.11
-- **RAM**: ≥32 GB recommended for processing full Sahel tiles
-- **Disk**: Model outputs from the full analysis are ~2 TB; the scripts can be run on subsets
+The main analysis scripts use path variables configured at the top of the
+`if __name__ == "__main__":` block. To run on your data, open the script
+and edit those variables before running.
 
-Python package dependencies are listed in `requirements.txt`. Key packages:
+### Step 1 — Compute per-tile trend significance
 
-| Package | Version tested | Purpose |
-|---|---|---|
-| `numpy` | 1.24 | Array operations |
-| `rasterio` | 1.3 | Raster I/O |
-| `geopandas` | 0.13 | Vector data handling |
-| `scipy` | 1.10 | Statistics |
-| `pandas` | 2.0 | Tabular data |
-| `matplotlib` / `seaborn` | 3.7 / 0.12 | Figures |
+Edit `src/significance.py`, updating these variables:
 
----
-
-## Installation
-
-```bash
-git clone https://github.com/<your-username>/landsat_tree_analysis.git
-cd landsat_tree_analysis
-pip install -r requirements.txt
+```python
+# Line ~120 in src/significance.py
+shape = gpd.read_file('/path/to/your/grid.gpkg')       # analysis grid shapefile
+landsat_prediction_dir = '/path/to/landsat_predictions' # dir of Landsat tree cover rasters
+prediction_suffix = 'your_model_suffix'                 # filename suffix identifying predictions
 ```
 
-Typical install time on a standard laptop: ~5 minutes (conda environment recommended).
-
-Using conda:
+Then run:
 ```bash
-conda create -n fmnr python=3.10
-conda activate fmnr
-pip install -r requirements.txt
+python src/significance.py
+```
+
+Processes all tiles in parallel. **Expected run time: ~4 hours for the full Sahel (~4,000 tiles) on a 32-core server.** Output: a CSV of per-tile statistics.
+
+### Step 2 — Aggregate by country and region
+
+Edit `src/analyse_predictions_v3.py` (same path variables as Step 1), then:
+
+```bash
+python src/analyse_predictions_v3.py
+```
+
+**Expected run time: ~2 hours on a 32-core server.** Output: CSV and GeoPackage of country-level statistics.
+
+### Step 3 — Reproduce paper figures
+
+Open `src/relative_diff_v3.ipynb` in Jupyter. Update the CSV paths in the first code cell to point to the CSVs produced in Step 2, then run all cells.
+
+**Expected run time: < 5 minutes on any laptop.**
+
+### Step 4 — Validate against VHR data (optional)
+
+Edit the path variables in `src/trend_validation.py` to point to your Planet/VHR tiles, then:
+```bash
+python src/trend_validation.py
 ```
 
 ---
 
 ## Data
 
-The analysis requires Landsat-derived tree cover prediction tiles produced by the preprocessing pipeline. These are not included in the repository due to size (~2 TB), but are archived at:
+The full Landsat-derived tree cover prediction tiles (~2 TB) are archived at:
 
 > **Zenodo DOI**: [to be added upon publication]
 
-The pre-trained model weights are included under `maurice_model/` (U-Net trained on 25 cm resolution Planet imagery over Niger, 2019; see Methods in the paper for details).
-
----
-
-## Usage
-
-### 1. Compute trend significance per tile
-
-```bash
-python src/significance.py \
-  --prediction_dir /path/to/landsat_predictions \
-  --grid_shp shapefiles/grid.gpkg \
-  --output_dir /path/to/output
-```
-
-Processes all tiles in parallel using `ProcessPoolExecutor`. Expected run time: ~4 hours for the full Sahel grid (~4,000 tiles) on a 32-core machine.
-
-### 2. Aggregate statistics by country
-
-```bash
-python src/analyse_predictions_v3.py \
-  --prediction_dir /path/to/output \
-  --grid_shp shapefiles/grid.gpkg
-```
-
-Outputs a CSV of tree cover change statistics per tile, with country/region attribution. Expected run time: ~2 hours on a 32-core machine.
-
-### 3. Reproduce paper figures
-
-Open and run `src/relative_diff_v3.ipynb` in Jupyter, pointing `crop_df` and `shrub_df` to the CSVs produced in step 2.
-
-Expected run time: < 5 minutes on any modern laptop.
-
-### 4. Trend validation
-
-```bash
-python src/trend_validation.py \
-  --landsat_dir /path/to/landsat_predictions \
-  --vhr_dir /path/to/planet_tiles \
-  --grid_shp shapefiles/grid.gpkg
-```
-
----
-
-## Demo
-
-A small test subset (5 tiles from Niger) is available in the Zenodo archive under `demo_data/`. To run:
-
-```bash
-python src/significance.py \
-  --prediction_dir demo_data/predictions \
-  --grid_shp shapefiles/grid.gpkg \
-  --output_dir demo_data/output
-
-python src/analyse_predictions_v3.py \
-  --prediction_dir demo_data/output \
-  --grid_shp shapefiles/grid.gpkg
-```
-
-Expected output: a CSV similar to `demo_data/expected_output/demo_results.csv`.
-Expected run time: < 10 minutes on a standard laptop (4 cores).
+The pre-trained model weights are in `maurice_model/` (U-Net trained on 25 cm Planet imagery over Niger, 2019; see paper Methods for details). The model file is tracked via Git LFS due to its size.
 
 ---
 
@@ -158,8 +163,6 @@ Expected run time: < 10 minutes on a standard laptop (4 cores).
 MIT — see [LICENSE](LICENSE).
 
 ## Citation
-
-If you use this code, please cite:
 
 ```
 [BibTeX to be added upon publication]
