@@ -154,8 +154,6 @@ The full Landsat-derived tree cover prediction tiles (~2 TB) are archived at:
 
 > **Zenodo DOI**: [to be added upon publication]
 
-The pre-trained model weights are in `maurice_model/` (U-Net trained on 25 cm Planet imagery over Niger, 2019; see paper Methods for details). The model file is tracked via Git LFS due to its size.
-
 ---
 
 ## License
